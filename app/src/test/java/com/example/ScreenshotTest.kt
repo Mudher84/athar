@@ -5,6 +5,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Rule
@@ -55,6 +56,8 @@ class ScreenshotTest {
 
         // شجرة السند ثم الترجمة
         waitFor(hasText("شجرة السند"))
+        compose.onAllNodes(hasText("شجرة السند")).onFirst().performScrollTo()
+        shot("01b-main-card")
         compose.onAllNodes(hasText("شجرة السند")).onFirst().performClick()
         waitFor(hasText("الإسناد كما في المصدر"))
         shot("04-chain-sheet")
@@ -66,7 +69,7 @@ class ScreenshotTest {
         compose.waitForIdle()
 
         // حفظ أول أثر ليظهر في المحفوظات
-        compose.onAllNodes(hasContentDescription("حفظ في المحفوظات")).onFirst().performClick()
+        compose.onAllNodes(hasContentDescription("حفظ في المحفوظات")).onFirst().performScrollTo().performClick()
 
         // الرواة
         compose.onNode(hasText("الرواة")).performClick()
