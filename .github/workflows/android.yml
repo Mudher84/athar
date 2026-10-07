@@ -18,8 +18,7 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - uses: android-actions/setup-android@v3
-
+      # Android SDK مثبّت مسبقاً على مشغّلات ubuntu (ANDROID_HOME)؛ AGP ينزّل المنصة 36 إن نقصت
       # لا يوجد gradlew في المشروع؛ نستعمل نسخة Gradle التي يتطلبها AGP 9.1
       - uses: gradle/actions/setup-gradle@v4
         with:
