@@ -8,166 +8,83 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.R
 
-// ============================================================================
-// LUXURIOUS DUAL-HARMONY ARABIC TYPOGRAPHY SYSTEM
-// - Classical Serif (Amiri & El Messiri): Royal, high-contrast, graceful Serif for
-//   grand headlines, section titles, Hadith Matn, and calligraphic badges.
-// - Modern Sans-serif (Tajawal & Almarai): Clear, warm, ultra-legible Sans-serif
-//   for reading body text, sanad chains, UI controls, navigation, and badges.
-// ============================================================================
+// أربع عائلات (DESIGN_SPEC §2): Amiri للمتون، El Messiri للعناوين والأسماء،
+// Tajawal لعناصر الواجهة، Almarai للنصوص الشارحة. كلها مضمّنة في res/font (لا تنزيل).
+val Amiri = FontFamily(Font(R.font.amiri, FontWeight.Normal))
+val ElMessiri = FontFamily(Font(R.font.el_messiri, FontWeight.Bold))
+val Tajawal = FontFamily(Font(R.font.tajawal, FontWeight.Normal))
+val Almarai = FontFamily(Font(R.font.almarai, FontWeight.Normal))
 
-// Classical Arabic Serif Fonts
-val AmiriFontFamily = FontFamily(
-    Font(R.font.amiri, FontWeight.Normal)
-)
+/** حدود تكبير خط المتن: من 19 إلى 29 بخطوة 2، وارتفاع السطر = الحجم × 1.7 (≥ 38 عند الافتراضي). */
+object AtharMatnScale {
+    const val Min = 19
+    const val Max = 29
+    const val Step = 2
+    const val Default = 23
+    const val LineHeightRatio = 1.7f
 
-val ElMessiriFontFamily = FontFamily(
-    Font(R.font.el_messiri, FontWeight.Bold)
-)
+    fun clamp(size: Int) = size.coerceIn(Min, Max)
+}
 
-// Master Serif Reference for Titles, Headers & Matn Sanctuary
-val ArabicSerifFontFamily = AmiriFontFamily
-val ArabicDisplaySerifFontFamily = ElMessiriFontFamily
+object AtharType {
+    // El Messiri — العناوين والأسماء
+    val Brand = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 32.sp, lineHeight = 36.sp)
+    val ScreenTitle = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 36.sp)
+    val SheetTitle = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 30.sp)
+    val BookTitle = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 24.sp, lineHeight = 32.sp)
+    val CardTitle = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 18.sp, lineHeight = 26.sp)
+    val NarratorName = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.SemiBold, fontSize = 16.5.sp, lineHeight = 24.sp)
+    val ChainNodeName = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp, lineHeight = 18.sp)
+    val StatNumber = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 34.sp)
+    val FactValue = TextStyle(fontFamily = ElMessiri, fontWeight = FontWeight.Bold, fontSize = 16.sp, lineHeight = 22.sp)
 
-// Contemporary Arabic Sans-serif Fonts
-val TajawalFontFamily = FontFamily(
-    Font(R.font.tajawal, FontWeight.Normal)
-)
-
-val AlmaraiFontFamily = FontFamily(
-    Font(R.font.almarai, FontWeight.Normal)
-)
-
-// Master Sans-serif Reference for Body, UI, Labels, Chips & Inputs
-val ArabicSansFontFamily = TajawalFontFamily
-val ArabicBodySansFontFamily = AlmaraiFontFamily
-
-// Alias for backwards compatibility
-val CairoFontFamily = ArabicSansFontFamily
-
-val AppTypography = Typography(
-    // ------------------------------------------------------------------------
-    // DISPLAY (Serif - Majestic Hero & Screen Banners)
-    // ------------------------------------------------------------------------
-    displayLarge = TextStyle(
-        fontFamily = ArabicDisplaySerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
-        lineHeight = 46.sp,
-        letterSpacing = 0.sp
-    ),
-    displayMedium = TextStyle(
-        fontFamily = ArabicDisplaySerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 40.sp,
-        letterSpacing = 0.sp
-    ),
-    displaySmall = TextStyle(
-        fontFamily = ArabicSerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 36.sp,
-        letterSpacing = 0.sp
-    ),
-
-    // ------------------------------------------------------------------------
-    // HEADLINE (Serif - Section Headings & Major Card Titles)
-    // ------------------------------------------------------------------------
-    headlineLarge = TextStyle(
-        fontFamily = ArabicSerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 34.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = ArabicSerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
-        lineHeight = 30.sp,
-        letterSpacing = 0.sp
-    ),
-    headlineSmall = TextStyle(
-        fontFamily = ArabicSerifFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-
-    // ------------------------------------------------------------------------
-    // TITLE (Serif / Sans-serif - Chapter Names, Scholar Names & Dialog Headers)
-    // ------------------------------------------------------------------------
-    titleLarge = TextStyle(
-        fontFamily = ArabicSerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 26.sp,
-        letterSpacing = 0.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = ArabicSerifFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.sp
-    ),
-    titleSmall = TextStyle(
-        fontFamily = ArabicSansFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.sp
-    ),
-
-    // ------------------------------------------------------------------------
-    // BODY (Sans-serif - High-Legibility, Flowing Body Text & Hadith Commentary)
-    // ------------------------------------------------------------------------
-    bodyLarge = TextStyle(
-        fontFamily = ArabicSansFontFamily,
+    // Amiri — المتون والاقتباسات
+    fun matn(sizeSp: Int = AtharMatnScale.Default) = TextStyle(
+        fontFamily = Amiri,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 26.sp,
-        letterSpacing = 0.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = ArabicSansFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 23.sp,
-        letterSpacing = 0.sp
-    ),
-    bodySmall = TextStyle(
-        fontFamily = ArabicBodySansFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 19.sp,
-        letterSpacing = 0.sp
-    ),
-
-    // ------------------------------------------------------------------------
-    // LABEL (Sans-serif - Interactive Buttons, Chips, Badges & Micro-Copy)
-    // ------------------------------------------------------------------------
-    labelLarge = TextStyle(
-        fontFamily = ArabicSansFontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = ArabicSansFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 12.sp,
-        lineHeight = 17.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = ArabicSansFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 15.sp,
-        letterSpacing = 0.sp
+        fontSize = sizeSp.sp,
+        lineHeight = (sizeSp * AtharMatnScale.LineHeightRatio).toInt().sp,
     )
+    val MatnCompact = TextStyle(fontFamily = Amiri, fontWeight = FontWeight.Normal, fontSize = 20.sp, lineHeight = 34.sp)
+    val Sanad = TextStyle(fontFamily = Amiri, fontWeight = FontWeight.Normal, fontSize = 18.sp, lineHeight = 32.sp)
+    val Callout = TextStyle(fontFamily = Amiri, fontWeight = FontWeight.Bold, fontSize = 17.sp, lineHeight = 26.sp)
+    val TashkeelGlyph = TextStyle(fontFamily = Amiri, fontWeight = FontWeight.Normal, fontSize = 22.sp)
+
+    // Tajawal — عناصر الواجهة
+    val SearchInput = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Normal, fontSize = 16.sp)
+    fun capsule(selected: Boolean) = TextStyle(
+        fontFamily = Tajawal,
+        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+        fontSize = 14.sp,
+    )
+    val Button = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+    val ButtonSmall = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+    val Counter = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+    val Link = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    val FilterLabel = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+    val Badge = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+    val Secondary = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Normal, fontSize = 12.5.sp, lineHeight = 18.sp)
+    val Caption = TextStyle(fontFamily = Tajawal, fontWeight = FontWeight.Normal, fontSize = 11.5.sp, lineHeight = 15.sp)
+    fun navLabel(active: Boolean) = TextStyle(
+        fontFamily = Tajawal,
+        fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
+        fontSize = 12.sp,
+    )
+
+    // Almarai — النصوص الشارحة
+    val Body = TextStyle(fontFamily = Almarai, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 25.sp)
+    val Description = TextStyle(fontFamily = Almarai, fontWeight = FontWeight.Normal, fontSize = 13.5.sp, lineHeight = 24.sp)
+    val Lineage = TextStyle(fontFamily = Almarai, fontWeight = FontWeight.Normal, fontSize = 12.5.sp, lineHeight = 18.sp)
+}
+
+/** Typography الافتراضي لمكوّنات Material التي لا نمرّر لها أسلوباً صريحاً */
+val AtharTypography = Typography(
+    titleLarge = AtharType.SheetTitle,
+    titleMedium = AtharType.CardTitle,
+    bodyLarge = AtharType.SearchInput,
+    bodyMedium = AtharType.Body,
+    bodySmall = AtharType.Secondary,
+    labelLarge = AtharType.ButtonSmall,
+    labelMedium = AtharType.Badge,
+    labelSmall = AtharType.Caption,
 )

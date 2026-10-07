@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar" />
+    <!-- أرضية عاجية من أول إطار حتى لا يومض الأبيض أو الأسود قبل Compose -->
+    <style name="Theme.MyApplication" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/athar_ivory</item>
+        <item name="android:statusBarColor">@color/athar_ivory</item>
+        <item name="android:navigationBarColor">@color/athar_ivory</item>
+    </style>
 </resources>

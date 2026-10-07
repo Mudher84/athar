@@ -1,79 +1,97 @@
 package com.example.ui.theme
 
-import android.os.Build
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 
-// ============================================================================
-// ULTRA-MODERN COLOR SCHEMES
-// ============================================================================
+object AtharShapes {
+    val HadithCard = RoundedCornerShape(26.dp)
+    val CompactCard = RoundedCornerShape(24.dp)
+    val ListContainer = RoundedCornerShape(22.dp)
+    val Capsule = RoundedCornerShape(22.dp)
+    val SearchField = RoundedCornerShape(18.dp)
+    val ReadingPanel = RoundedCornerShape(18.dp)
+    val InnerCard = RoundedCornerShape(18.dp)
+    val PrimaryButton = RoundedCornerShape(16.dp)
+    val IconButton = RoundedCornerShape(14.dp)
+    val BottomSheet = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    val Dialog = RoundedCornerShape(28.dp)
+    val RegionBadge = RoundedCornerShape(13.dp)
+    val FilterPill = RoundedCornerShape(15.dp)
+}
 
-private val ModernLightColorScheme = lightColorScheme(
-    primary = ModernIndigoPrimary,
+object AtharDimens {
+    val ScreenPadding = 20.dp
+    val ListPadding = 16.dp
+    val CardPadding = 18.dp
+    val CardGap = 14.dp
+    val FilterLabelWidth = 48.dp
+    val CapsuleHeight = 48.dp // التصميم 44؛ Android يطلب 48 لهدف اللمس
+    val CapsuleBorder = 1.5.dp
+    val DropdownMaxHeight = 290.dp
+    val SearchFieldHeight = 52.dp
+    val ChainTreeNodeSize = 36.dp
+    val ChainLineWidth = 2.dp
+    val MinTouchTarget = 48.dp
+}
+
+private val AtharLightColorScheme = lightColorScheme(
+    primary = AtharColors.Cypress,
     onPrimary = Color.White,
-    primaryContainer = ModernIndigoContainer,
-    onPrimaryContainer = ModernIndigoOnContainer,
-    secondary = ModernTealAccent,
+    primaryContainer = AtharColors.CypressContainer,
+    onPrimaryContainer = AtharColors.Cypress,
+    secondary = AtharColors.AmberDeep,
     onSecondary = Color.White,
-    secondaryContainer = ModernTealContainer,
-    onSecondaryContainer = ModernTealAccent,
-    tertiary = ModernViolet,
+    secondaryContainer = AtharColors.NavIndicator,
+    onSecondaryContainer = AtharColors.Cypress,
+    tertiary = AtharColors.Amber,
     onTertiary = Color.White,
-    background = ModernBgLight,
-    onBackground = ModernTextPrimaryLight,
-    surface = ModernSurfaceLight,
-    onSurface = ModernTextPrimaryLight,
-    surfaceVariant = ModernSurfaceVariantLight,
-    onSurfaceVariant = ModernTextSecondaryLight,
-    outline = ModernBorderLight,
-    outlineVariant = ModernDividerLight
+    tertiaryContainer = AtharColors.AmberContainer,
+    onTertiaryContainer = AtharColors.OnAmberContainer,
+    background = AtharColors.Ivory,
+    onBackground = AtharColors.Ink,
+    surface = AtharColors.Ivory,
+    onSurface = AtharColors.Ink,
+    surfaceVariant = AtharColors.SurfaceTint,
+    onSurfaceVariant = AtharColors.Muted,
+    // القوائم المنسدلة والنوافذ تأخذ هذه الطبقات في Material 3
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color.White,
+    surfaceContainer = Color.White,
+    surfaceContainerHigh = AtharColors.Ivory,
+    surfaceContainerHighest = AtharColors.SurfaceTint,
+    outline = AtharColors.Outline,
+    outlineVariant = AtharColors.OutlineVariant,
+    scrim = AtharColors.Scrim,
 )
 
-private val ModernDarkColorScheme = darkColorScheme(
-    primary = ModernIndigoLight,
-    onPrimary = ModernBgDark,
-    primaryContainer = ModernIndigoOnContainer,
-    onPrimaryContainer = ModernIndigoContainer,
-    secondary = ModernTealLight,
-    onSecondary = ModernBgDark,
-    secondaryContainer = Color(0xFF134E4A),
-    onSecondaryContainer = ModernTealLight,
-    tertiary = ModernViolet,
-    onTertiary = Color.White,
-    background = ModernBgDark,
-    onBackground = ModernTextPrimaryDark,
-    surface = ModernSurfaceDark,
-    onSurface = ModernTextPrimaryDark,
-    surfaceVariant = ModernSurfaceVariantDark,
-    onSurfaceVariant = ModernTextSecondaryDark,
-    outline = ModernBorderDark,
-    outlineVariant = ModernDividerDark
+private val AtharMaterialShapes = Shapes(
+    // DropdownMenu يستعمل extraSmall
+    extraSmall = RoundedCornerShape(24.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(26.dp),
+    extraLarge = RoundedCornerShape(28.dp),
 )
 
+/**
+ * ثيم «أثر»: فاتح فقط (الوضع الليلي غير مصمَّم)، والاتجاه من اليمين إلى اليسار في كل الشاشات
+ * بصرف النظر عن لغة الجهاز.
+ */
 @Composable
-fun AtharTheme(
-    darkTheme: Boolean = false,
-    dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
-) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> ModernDarkColorScheme
-        else -> ModernLightColorScheme
-    }
-
+fun AtharTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = AppTypography,
-        content = content
-    )
+        colorScheme = AtharLightColorScheme,
+        typography = AtharTypography,
+        shapes = AtharMaterialShapes,
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl, content = content)
+    }
 }

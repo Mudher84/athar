@@ -13,7 +13,6 @@ import com.example.data.local.entity.NarratorEntity
 import com.example.domain.model.BookWithCount
 import com.example.domain.model.HadithListItem
 import com.example.domain.model.NarratorWithCount
-import com.example.domain.model.RawChainLink
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -62,6 +61,44 @@ interface AtharDao {
         connectedOnly: Boolean
     ): PagingSource<Int, HadithListItem>
 
+    /** عدد نتائج [pageHadiths] بنفس الفلاتر، لشريط النتائج */
+    @Query(
+        """
+        SELECT COUNT(*) FROM hadiths h
+        WHERE (:bookId IS NULL OR h.book_id = :bookId)
+          AND (:region IS NULL OR h.region_tag = :region)
+          AND (:narratorId IS NULL OR h.id IN
+                (SELECT hadith_id FROM hadith_narrator_chain WHERE narrator_id = :narratorId))
+          AND (:connectedOnly = 0 OR h.is_mursal_or_balagh = 0)
+        """
+    )
+    fun countHadiths(
+        bookId: Int?,
+        region: String?,
+        narratorId: Int?,
+        connectedOnly: Boolean
+    ): Flow<Int>
+
+    /** عدد نتائج [searchHadiths] بنفس الفلاتر */
+    @Query(
+        """
+        SELECT COUNT(*) FROM hadiths h
+        WHERE h.id IN (SELECT rowid FROM hadith_fts WHERE hadith_fts MATCH :match)
+          AND (:bookId IS NULL OR h.book_id = :bookId)
+          AND (:region IS NULL OR h.region_tag = :region)
+          AND (:narratorId IS NULL OR h.id IN
+                (SELECT hadith_id FROM hadith_narrator_chain WHERE narrator_id = :narratorId))
+          AND (:connectedOnly = 0 OR h.is_mursal_or_balagh = 0)
+        """
+    )
+    fun countSearch(
+        match: String,
+        bookId: Int?,
+        region: String?,
+        narratorId: Int?,
+        connectedOnly: Boolean
+    ): Flow<Int>
+
     @Query(
         SELECT_ITEM + """
         INNER JOIN favorite_hadiths fav ON fav.hadith_id = h.id
@@ -70,34 +107,32 @@ interface AtharDao {
     )
     fun pageFavorites(): PagingSource<Int, HadithListItem>
 
+    /** البحث داخل المحفوظات فقط */
+    @Query(
+        SELECT_ITEM + """
+        INNER JOIN favorite_hadiths fav ON fav.hadith_id = h.id
+        WHERE h.id IN (SELECT rowid FROM hadith_fts WHERE hadith_fts MATCH :match)
+        ORDER BY fav.created_at DESC
+        """
+    )
+    fun searchFavorites(match: String): PagingSource<Int, HadithListItem>
+
+    @Query("SELECT COUNT(*) FROM favorite_hadiths")
+    fun countFavorites(): Flow<Int>
+
+    @Query(
+        """
+        SELECT COUNT(*) FROM favorite_hadiths
+        WHERE hadith_id IN (SELECT rowid FROM hadith_fts WHERE hadith_fts MATCH :match)
+        """
+    )
+    fun countFavoritesSearch(match: String): Flow<Int>
+
     @Query(SELECT_ITEM + " WHERE h.id = :hadithId")
     fun getHadithItem(hadithId: Int): Flow<HadithListItem?>
 
     @Query("SELECT COUNT(*) FROM hadiths")
-    fun countHadiths(): Flow<Int>
-
-    // ---------------------------------------------------------------- السند
-
-    @Query(
-        """
-        SELECT
-            c.hadith_id AS hadithId,
-            c.chain_order AS chainOrder,
-            n.id AS narratorId,
-            n.name AS name,
-            n.popular_name AS popularName,
-            n.region AS region,
-            n.era AS era,
-            n.is_trusted AS isTrusted,
-            n.sect_affiliation AS sectAffiliation,
-            n.notes AS notes
-        FROM hadith_narrator_chain c
-        INNER JOIN narrators n ON c.narrator_id = n.id
-        WHERE c.hadith_id = :hadithId
-        ORDER BY c.chain_order ASC
-        """
-    )
-    fun getChainLinksForHadith(hadithId: Int): Flow<List<RawChainLink>>
+    fun countAllHadiths(): Flow<Int>
 
     // ---------------------------------------------------------------- الرواة والكتب
 

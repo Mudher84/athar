@@ -26,7 +26,10 @@ data class HadithListItem(
     val chainPacked: String?,
     val isFavorite: Boolean
 ) {
-    /** رواة المسار بترتيب السند */
+    val region: Region? get() = Region.fromTag(regionTag)
+
+    /** رواة المسار بترتيب السند (من جهة المصنِّف نحو أعلى الإسناد) */
+    // خاصية محسوبة بلا حقل خلفي حتى لا يحاول Room ربطها بعمود
     val chain: List<ChainNode>
         get() = chainPacked.orEmpty()
             .split('¦')
@@ -40,11 +43,16 @@ data class HadithListItem(
 @Immutable
 data class ChainNode(val narratorId: Int, val name: String)
 
+@Immutable
 data class NarratorWithCount(
     @Embedded val narrator: NarratorEntity,
     val hadithCount: Int
-)
+) {
+    val region: Region get() = Region.ofNarrator(narrator.region)
+    val displayName: String get() = narrator.popularName ?: narrator.name
+}
 
+@Immutable
 data class BookWithCount(
     @Embedded val book: BookEntity,
     val hadithCount: Int

@@ -1,98 +1,78 @@
 package com.example.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.example.data.local.dao.AtharDao
-import com.example.data.local.entity.BookEntity
 import com.example.data.local.entity.FavoriteHadithEntity
-import com.example.data.local.entity.NarratorEntity
-import com.example.domain.model.HadithDetail
-import com.example.domain.model.NarratorInChain
+import com.example.domain.model.BookWithCount
+import com.example.domain.model.HadithFilters
+import com.example.domain.model.HadithListItem
+import com.example.domain.model.NarratorWithCount
+import com.example.util.ArabicText
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 
+/** مصدر البيانات الوحيد للواجهة؛ كل شيء من القاعدة المحلية دون شبكة. */
 interface AtharRepository {
-    fun getAllHadithDetails(): Flow<List<HadithDetail>>
-    fun getAllNarrators(): Flow<List<NarratorEntity>>
-    fun getAllBooks(): Flow<List<BookEntity>>
-    suspend fun toggleFavorite(hadithId: Int, currentFav: Boolean)
+    fun hadiths(query: String, filters: HadithFilters): Flow<PagingData<HadithListItem>>
+    fun countHadiths(query: String, filters: HadithFilters): Flow<Int>
+    fun favorites(query: String): Flow<PagingData<HadithListItem>>
+    fun countFavorites(query: String): Flow<Int>
+    fun books(): Flow<List<BookWithCount>>
+    fun narrators(): Flow<List<NarratorWithCount>>
+    suspend fun setFavorite(hadithId: Int, favorite: Boolean)
 }
 
-class AtharRepositoryImpl(
-    private val dao: AtharDao
-) : AtharRepository {
+class AtharRepositoryImpl(private val dao: AtharDao) : AtharRepository {
 
-    override fun getAllHadithDetails(): Flow<List<HadithDetail>> {
-        return combine(
-            dao.getAllHadiths(),
-            dao.getAllBooks(),
-            dao.getAllRawChainLinks(),
-            dao.getFavoriteHadithIds()
-        ) { hadiths, books, chainLinks, favIds ->
-            val bookMap = books.associateBy { it.id }
-            val favSet = favIds.toSet()
+    private val pagingConfig = PagingConfig(
+        pageSize = PAGE_SIZE,
+        prefetchDistance = PAGE_SIZE / 2,
+        enablePlaceholders = false,
+        initialLoadSize = PAGE_SIZE * 2
+    )
 
-            // Group chain links by hadithId and order by chainOrder
-            val chainsByHadith = chainLinks.groupBy { it.hadithId }.mapValues { entry ->
-                entry.value.sortedBy { it.chainOrder }.map { raw ->
-                    NarratorInChain(
-                        narratorId = raw.narratorId,
-                        name = raw.name,
-                        popularName = raw.popularName,
-                        region = raw.region,
-                        era = raw.era,
-                        isTrusted = raw.isTrusted,
-                        sectAffiliation = raw.sectAffiliation,
-                        notes = raw.notes,
-                        chainOrder = raw.chainOrder
-                    )
-                }
+    override fun hadiths(query: String, filters: HadithFilters): Flow<PagingData<HadithListItem>> {
+        val match = ArabicText.buildMatchQuery(query)
+        return Pager(pagingConfig) {
+            if (match == null) {
+                dao.pageHadiths(filters.bookId, filters.region?.tag, filters.narratorId, filters.connectedOnly)
+            } else {
+                dao.searchHadiths(match, filters.bookId, filters.region?.tag, filters.narratorId, filters.connectedOnly)
             }
-
-            hadiths.map { hadith ->
-                val book = bookMap[hadith.bookId] ?: BookEntity(
-                    id = hadith.bookId,
-                    title = "مصدر غير معروف",
-                    author = "غير معروف",
-                    era = "الحقبة الأموية"
-                )
-                val chain = chainsByHadith[hadith.id] ?: emptyList()
-                val isFav = favSet.contains(hadith.id)
-
-                HadithDetail(
-                    hadith = hadith,
-                    book = book,
-                    chain = chain,
-                    isFavorite = isFav
-                )
-            }
-        }
+        }.flow
     }
 
-    override fun getAllNarrators(): Flow<List<NarratorEntity>> = dao.getAllNarrators()
-
-    override fun getAllBooks(): Flow<List<BookEntity>> = dao.getAllBooks()
-
-    override suspend fun toggleFavorite(hadithId: Int, currentFav: Boolean) {
-        if (currentFav) {
-            dao.deleteFavorite(hadithId)
+    override fun countHadiths(query: String, filters: HadithFilters): Flow<Int> {
+        val match = ArabicText.buildMatchQuery(query)
+        return if (match == null) {
+            dao.countHadiths(filters.bookId, filters.region?.tag, filters.narratorId, filters.connectedOnly)
         } else {
-            dao.insertFavorite(FavoriteHadithEntity(hadithId = hadithId))
+            dao.countSearch(match, filters.bookId, filters.region?.tag, filters.narratorId, filters.connectedOnly)
         }
     }
 
-    companion object {
-        fun normalizeArabic(input: String): String {
-            if (input.isEmpty()) return ""
-            var result = input
-            // Strip tashkeel
-            val tashkeelRegex = Regex("[\\u0617-\\u061A\\u064B-\\u0652]")
-            result = tashkeelRegex.replace(result, "")
-            // Normalize Alefs
-            result = result.replace(Regex("[إأآ]"), "ا")
-            // Normalize Taa Marbuta
-            result = result.replace("ة", "ه")
-            // Normalize Alif Maksura
-            result = result.replace("ى", "ي")
-            return result
-        }
+    override fun favorites(query: String): Flow<PagingData<HadithListItem>> {
+        val match = ArabicText.buildMatchQuery(query)
+        return Pager(pagingConfig) {
+            if (match == null) dao.pageFavorites() else dao.searchFavorites(match)
+        }.flow
+    }
+
+    override fun countFavorites(query: String): Flow<Int> {
+        val match = ArabicText.buildMatchQuery(query)
+        return if (match == null) dao.countFavorites() else dao.countFavoritesSearch(match)
+    }
+
+    override fun books(): Flow<List<BookWithCount>> = dao.getBooksWithCount()
+
+    override fun narrators(): Flow<List<NarratorWithCount>> = dao.getNarratorsWithCount()
+
+    override suspend fun setFavorite(hadithId: Int, favorite: Boolean) {
+        if (favorite) dao.insertFavorite(FavoriteHadithEntity(hadithId)) else dao.deleteFavorite(hadithId)
+    }
+
+    private companion object {
+        const val PAGE_SIZE = 20
     }
 }

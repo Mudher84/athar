@@ -2,296 +2,177 @@ package com.example
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoStories
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.People
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.data.local.AtharDatabase
-import com.example.data.repository.AtharRepositoryImpl
+import com.example.domain.model.HadithListItem
+import com.example.domain.model.NarratorWithCount
+import com.example.domain.model.UiState
+import com.example.ui.AtharViewModel
 import com.example.ui.components.NarratorBioDialog
 import com.example.ui.components.NarratorChainBottomSheet
+import com.example.ui.components.NarratorDirectory
 import com.example.ui.screens.BooksScreen
 import com.example.ui.screens.FavoritesScreen
-import com.example.ui.screens.HadithHomeScreen
+import com.example.ui.screens.HadithsScreen
 import com.example.ui.screens.NarratorsScreen
-import com.example.ui.theme.ArabicSansFontFamily
+import com.example.ui.theme.AtharColors
 import com.example.ui.theme.AtharTheme
-import com.example.ui.theme.RoyalGoldLight
-import com.example.ui.theme.RoyalGoldPrimary
-import com.example.ui.theme.RoyalNavyDark
-import com.example.ui.theme.RoyalNavyPrimary
-import com.example.ui.viewmodel.HadithFilterViewModel
+import com.example.ui.theme.AtharType
 
 class MainActivity : ComponentActivity() {
-
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        // أرضية فاتحة فقط: أيقونات شريط الحالة داكنة دائماً
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.light(AtharColors.Ivory.toArgb(), AtharColors.Ivory.toArgb()),
+            navigationBarStyle = SystemBarStyle.light(android.graphics.Color.WHITE, android.graphics.Color.WHITE)
+        )
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
         setContent {
-            val context = applicationContext
-            val database = remember { AtharDatabase.getInstance(context) }
-            val repository = remember { AtharRepositoryImpl(database.atharDao()) }
-            val viewModel: HadithFilterViewModel = viewModel(
-                factory = HadithFilterViewModel.Factory(repository)
+            AtharTheme {
+                AtharApp()
+            }
+        }
+    }
+}
+
+private enum class AtharTab(val label: String, val icon: ImageVector) {
+    Hadiths("الآثار", Icons.Outlined.Description),
+    Narrators("الرواة", Icons.Outlined.Groups),
+    Books("الكتب", Icons.AutoMirrored.Outlined.MenuBook),
+    Favorites("المحفوظات", Icons.Outlined.BookmarkBorder),
+}
+
+@Composable
+fun AtharApp(viewModel: AtharViewModel = viewModel(factory = AtharViewModel.Factory)) {
+    var tab by rememberSaveable { mutableStateOf(AtharTab.Hadiths) }
+    val stateHolder = rememberSaveableStateHolder()
+
+    val narratorsState by viewModel.narrators.collectAsStateWithLifecycle()
+    val booksState by viewModel.books.collectAsStateWithLifecycle()
+    val reading by viewModel.readingSettings.collectAsStateWithLifecycle()
+    val narrators = remember(narratorsState) {
+        (narratorsState as? UiState.Success)?.data?.let(NarratorDirectory::of) ?: NarratorDirectory.Empty
+    }
+
+    var chainItem by remember { mutableStateOf<HadithListItem?>(null) }
+    var bioNarrator by remember { mutableStateOf<NarratorWithCount?>(null) }
+
+    BackHandler(enabled = tab != AtharTab.Hadiths) { tab = AtharTab.Hadiths }
+
+    Scaffold(
+        containerColor = AtharColors.Ivory,
+        bottomBar = { AtharNavigationBar(selected = tab, onSelect = { tab = it }) }
+    ) { padding ->
+        Box(Modifier.fillMaxSize().padding(padding)) {
+            // كل تبويب يحفظ موضع تمريره عند التنقل
+            stateHolder.SaveableStateProvider(tab.name) {
+                when (tab) {
+                    AtharTab.Hadiths -> HadithsScreen(
+                        viewModel = viewModel,
+                        narrators = narrators,
+                        onOpenChain = { chainItem = it }
+                    )
+                    AtharTab.Narrators -> NarratorsScreen(
+                        state = narratorsState,
+                        onOpenNarrator = { bioNarrator = it }
+                    )
+                    AtharTab.Books -> BooksScreen(
+                        state = booksState,
+                        onBrowseBook = {
+                            viewModel.showBookHadiths(it.book.id)
+                            tab = AtharTab.Hadiths
+                        }
+                    )
+                    AtharTab.Favorites -> FavoritesScreen(
+                        viewModel = viewModel,
+                        narrators = narrators,
+                        onOpenChain = { chainItem = it }
+                    )
+                }
+            }
+        }
+    }
+
+    chainItem?.let { item ->
+        NarratorChainBottomSheet(
+            item = item,
+            narrators = narrators,
+            showTashkeel = reading.showTashkeel,
+            onDismiss = { chainItem = null },
+            onOpenNarrator = { bioNarrator = it }
+        )
+    }
+
+    bioNarrator?.let { narrator ->
+        NarratorBioDialog(
+            narrator = narrator,
+            onDismiss = { bioNarrator = null },
+            onShowHadiths = {
+                viewModel.showNarratorHadiths(it.narrator.id)
+                bioNarrator = null
+                chainItem = null
+                tab = AtharTab.Hadiths
+            }
+        )
+    }
+}
+
+@Composable
+private fun AtharNavigationBar(selected: AtharTab, onSelect: (AtharTab) -> Unit) {
+    NavigationBar(
+        containerColor = AtharColors.Surface,
+        tonalElevation = 0.dp,
+        modifier = Modifier.drawBehind {
+            drawLine(AtharColors.OutlineVariant, Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1.dp.toPx())
+        }
+    ) {
+        AtharTab.entries.forEach { tab ->
+            val active = tab == selected
+            NavigationBarItem(
+                selected = active,
+                onClick = { onSelect(tab) },
+                icon = { Icon(tab.icon, contentDescription = null, modifier = Modifier.size(22.dp)) },
+                label = { Text(tab.label, style = AtharType.navLabel(active)) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = AtharColors.Cypress,
+                    selectedTextColor = AtharColors.Cypress,
+                    indicatorColor = AtharColors.NavIndicator,
+                    unselectedIconColor = AtharColors.Muted,
+                    unselectedTextColor = AtharColors.Muted
+                )
             )
-
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val snackbarHostState = remember { SnackbarHostState() }
-
-            LaunchedEffect(uiState.userNotice) {
-                uiState.userNotice?.let { notice ->
-                    snackbarHostState.showSnackbar(notice)
-                    viewModel.clearNotice()
-                }
-            }
-
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                AtharTheme(darkTheme = uiState.isDarkMode) {
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        containerColor = MaterialTheme.colorScheme.background,
-                        snackbarHost = { SnackbarHost(snackbarHostState) },
-                        bottomBar = {
-                            Surface(
-                                modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
-                                shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
-                                color = MaterialTheme.colorScheme.surface,
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                                shadowElevation = 2.dp
-                            ) {
-                                NavigationBar(
-                                    modifier = Modifier.testTag("main_bottom_nav"),
-                                    containerColor = Color.Transparent,
-                                    tonalElevation = 0.dp
-                                ) {
-                                    NavigationBarItem(
-                                        selected = uiState.currentTab == 0,
-                                        onClick = { viewModel.setTab(0) },
-                                        icon = {
-                                            Icon(
-                                                imageVector = if (uiState.currentTab == 0) Icons.Default.MenuBook else Icons.Outlined.MenuBook,
-                                                contentDescription = stringResource(R.string.tab_hadiths)
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                text = stringResource(R.string.tab_hadiths),
-                                                fontFamily = ArabicSansFontFamily,
-                                                fontWeight = if (uiState.currentTab == 0) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 11.sp
-                                            )
-                                        },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        ),
-                                        modifier = Modifier.testTag("nav_tab_hadiths")
-                                    )
-
-                                    NavigationBarItem(
-                                        selected = uiState.currentTab == 1,
-                                        onClick = { viewModel.setTab(1) },
-                                        icon = {
-                                            Icon(
-                                                imageVector = if (uiState.currentTab == 1) Icons.Default.People else Icons.Outlined.People,
-                                                contentDescription = stringResource(R.string.tab_narrators)
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                text = stringResource(R.string.tab_narrators),
-                                                fontFamily = ArabicSansFontFamily,
-                                                fontWeight = if (uiState.currentTab == 1) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 11.sp
-                                            )
-                                        },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        ),
-                                        modifier = Modifier.testTag("nav_tab_narrators")
-                                    )
-
-                                    NavigationBarItem(
-                                        selected = uiState.currentTab == 2,
-                                        onClick = { viewModel.setTab(2) },
-                                        icon = {
-                                            Icon(
-                                                imageVector = if (uiState.currentTab == 2) Icons.Default.AutoStories else Icons.Outlined.AutoStories,
-                                                contentDescription = stringResource(R.string.tab_books)
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                text = stringResource(R.string.tab_books),
-                                                fontFamily = ArabicSansFontFamily,
-                                                fontWeight = if (uiState.currentTab == 2) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 11.sp
-                                            )
-                                        },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        ),
-                                        modifier = Modifier.testTag("nav_tab_books")
-                                    )
-
-                                    NavigationBarItem(
-                                        selected = uiState.currentTab == 3,
-                                        onClick = { viewModel.setTab(3) },
-                                        icon = {
-                                            Icon(
-                                                imageVector = if (uiState.currentTab == 3) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
-                                                contentDescription = stringResource(R.string.tab_favorites)
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                text = stringResource(R.string.tab_favorites),
-                                                fontFamily = ArabicSansFontFamily,
-                                                fontWeight = if (uiState.currentTab == 3) FontWeight.Bold else FontWeight.Medium,
-                                                fontSize = 11.sp
-                                            )
-                                        },
-                                        colors = NavigationBarItemDefaults.colors(
-                                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        ),
-                                        modifier = Modifier.testTag("nav_tab_favorites")
-                                    )
-                                }
-                            }
-                        }
-                    ) { innerPadding ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding)
-                        ) {
-                            if (uiState.isLoading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.align(Alignment.Center),
-                                    color = RoyalGoldPrimary
-                                )
-                            } else {
-                                Crossfade(
-                                    targetState = uiState.currentTab,
-                                    label = "tab_transition"
-                                ) { tab ->
-                                    when (tab) {
-                                        0 -> HadithHomeScreen(
-                                            uiState = uiState,
-                                            onSearchChange = viewModel::onSearchQueryChanged,
-                                            onClearSearch = viewModel::clearSearch,
-                                            onFilterSelect = viewModel::setFilterType,
-                                            onSelectRegion = viewModel::setSelectedRegion,
-                                            onSelectEra = viewModel::setSelectedEra,
-                                            onSelectNarrator = viewModel::setSelectedNarrator,
-                                            onToggleExpandAdvancedSearch = viewModel::toggleAdvancedSearch,
-                                            onResetAllFilters = viewModel::resetAllFilters,
-                                            onToggleTashkeel = viewModel::toggleTashkeel,
-                                            onToggleTheme = viewModel::toggleTheme,
-                                            onAdjustFontSize = viewModel::adjustFontSize,
-                                            onDeconstructSanad = viewModel::openNarratorChain,
-                                            onToggleFavorite = viewModel::toggleFavorite
-                                        )
-                                        1 -> NarratorsScreen(
-                                            uiState = uiState,
-                                            onNarratorClick = viewModel::openNarratorBio
-                                        )
-                                        2 -> BooksScreen(
-                                            uiState = uiState,
-                                            onBookSelect = { _ ->
-                                                viewModel.setTab(0)
-                                            }
-                                        )
-                                        3 -> FavoritesScreen(
-                                            uiState = uiState,
-                                            onDeconstructSanad = viewModel::openNarratorChain,
-                                            onToggleFavorite = viewModel::toggleFavorite
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Modal Bottom Sheet for Narrator Chain
-                            uiState.selectedHadithForChain?.let { hadithDetail ->
-                                NarratorChainBottomSheet(
-                                    detail = hadithDetail,
-                                    onDismiss = viewModel::closeNarratorChain,
-                                    onNarratorClick = viewModel::openNarratorBio
-                                )
-                            }
-
-                            // Dialog for Narrator Bio
-                            uiState.selectedNarratorForModal?.let { narrator ->
-                                NarratorBioDialog(
-                                    narrator = narrator,
-                                    onDismiss = viewModel::closeNarratorBio
-                                )
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }
