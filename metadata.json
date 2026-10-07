@@ -1,0 +1,6 @@
+{
+  "name": "Athar",
+  "description": "تطبيق لعرض وغربلة الأحاديث والآثار النبوية والتاريخية المروية عن رواة أهل المدينة ورواة الشام والأندلس في الحقبة الأموية مع دراسة السلسلة السندية",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

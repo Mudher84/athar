@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Athar</string>
+    <string name="app_title_ar">آثار أهل المدينة والشام</string>
+    <string name="app_subtitle_ar">مرويات المدرسة المالكية ورواة الشام والأندلس في الحقبة الأموية</string>
+    <string name="tab_hadiths">الآثار والأحاديث</string>
+    <string name="tab_narrators">معجم الرواة</string>
+    <string name="tab_books">المصادر والكتب</string>
+    <string name="tab_favorites">المحفوظات</string>
+    <string name="search_hint">ابحث في المتن، السند، اسم الراوي، أو الباب…</string>
+    <string name="filter_all">كافة المرويات</string>
+    <string name="filter_madinah">أهل المدينة (مالكي)</string>
+    <string name="filter_sham">أهل الشام (أموي)</string>
+    <string name="filter_andalus">رواة الأندلس</string>
+    <string name="sanad_chain_title">السلسلة السندية وطبقات الرواة</string>
+    <string name="narrator_bio_title">بطاقة ترجمة الراوي</string>
+    <string name="copy_hadith">نسخ الحديث</string>
+    <string name="share_hadith">مشاركة</string>
+    <string name="copied_to_clipboard">تم نسخ النص إلى الحافظة</string>
+    <string name="trusted_badge">ثقة ثبت</string>
+    <string name="sect_badge">مبرأ من التشيع والكوفيات</string>
+</resources>
