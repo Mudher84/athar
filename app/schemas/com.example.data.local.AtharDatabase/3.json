@@ -1,0 +1,390 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "daa0cf74661043c7fce6328a042bc9ea",
+    "entities": [
+      {
+        "tableName": "books",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `author` TEXT NOT NULL, `era` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "author",
+            "columnName": "author",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "era",
+            "columnName": "era",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "narrators",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `popular_name` TEXT, `region` TEXT NOT NULL, `era` TEXT NOT NULL, `is_trusted` INTEGER NOT NULL DEFAULT 1, `sect_affiliation` TEXT DEFAULT 'سني-أهل المدينة', `notes` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "popularName",
+            "columnName": "popular_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "region",
+            "columnName": "region",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "era",
+            "columnName": "era",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isTrusted",
+            "columnName": "is_trusted",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "sectAffiliation",
+            "columnName": "sect_affiliation",
+            "affinity": "TEXT",
+            "defaultValue": "'سني-أهل المدينة'"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "idx_narrator_region",
+            "unique": false,
+            "columnNames": [
+              "region"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `idx_narrator_region` ON `${TABLE_NAME}` (`region`)"
+          }
+        ]
+      },
+      {
+        "tableName": "hadiths",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `book_id` INTEGER NOT NULL, `chapter` TEXT NOT NULL, `path_badge` TEXT NOT NULL, `region_tag` TEXT NOT NULL DEFAULT 'المدينة', `raw_sanad` TEXT NOT NULL, `matn` TEXT NOT NULL, `is_mursal_or_balagh` INTEGER NOT NULL DEFAULT 0, `transmission_note` TEXT, `source_number` INTEGER, FOREIGN KEY(`book_id`) REFERENCES `books`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bookId",
+            "columnName": "book_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chapter",
+            "columnName": "chapter",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pathBadge",
+            "columnName": "path_badge",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "regionTag",
+            "columnName": "region_tag",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'المدينة'"
+          },
+          {
+            "fieldPath": "rawSanad",
+            "columnName": "raw_sanad",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "matn",
+            "columnName": "matn",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isMursalOrBalagh",
+            "columnName": "is_mursal_or_balagh",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "transmissionNote",
+            "columnName": "transmission_note",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceNumber",
+            "columnName": "source_number",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_hadiths_book_id",
+            "unique": false,
+            "columnNames": [
+              "book_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hadiths_book_id` ON `${TABLE_NAME}` (`book_id`)"
+          },
+          {
+            "name": "index_hadiths_path_badge",
+            "unique": false,
+            "columnNames": [
+              "path_badge"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hadiths_path_badge` ON `${TABLE_NAME}` (`path_badge`)"
+          },
+          {
+            "name": "index_hadiths_chapter",
+            "unique": false,
+            "columnNames": [
+              "chapter"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hadiths_chapter` ON `${TABLE_NAME}` (`chapter`)"
+          },
+          {
+            "name": "index_hadiths_region_tag",
+            "unique": false,
+            "columnNames": [
+              "region_tag"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_hadiths_region_tag` ON `${TABLE_NAME}` (`region_tag`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "books",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "book_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "hadith_narrator_chain",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hadith_id` INTEGER NOT NULL, `narrator_id` INTEGER NOT NULL, `chain_order` INTEGER NOT NULL, PRIMARY KEY(`hadith_id`, `chain_order`), FOREIGN KEY(`hadith_id`) REFERENCES `hadiths`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`narrator_id`) REFERENCES `narrators`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "hadithId",
+            "columnName": "hadith_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "narratorId",
+            "columnName": "narrator_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chainOrder",
+            "columnName": "chain_order",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hadith_id",
+            "chain_order"
+          ]
+        },
+        "indices": [
+          {
+            "name": "idx_chain_hadith",
+            "unique": false,
+            "columnNames": [
+              "hadith_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `idx_chain_hadith` ON `${TABLE_NAME}` (`hadith_id`)"
+          },
+          {
+            "name": "idx_chain_narrator",
+            "unique": false,
+            "columnNames": [
+              "narrator_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `idx_chain_narrator` ON `${TABLE_NAME}` (`narrator_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "hadiths",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hadith_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "narrators",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "narrator_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "favorite_hadiths",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`hadith_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, PRIMARY KEY(`hadith_id`), FOREIGN KEY(`hadith_id`) REFERENCES `hadiths`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "hadithId",
+            "columnName": "hadith_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "hadith_id"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "hadiths",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "hadith_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "hadith_fts",
+        "createSql": "CREATE VIRTUAL TABLE IF NOT EXISTS `${TABLE_NAME}` USING FTS4(`matn` TEXT NOT NULL, `sanad` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "matn",
+            "columnName": "matn",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sanad",
+            "columnName": "sanad",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "rowid"
+          ]
+        },
+        "ftsVersion": "FTS4",
+        "ftsOptions": {
+          "tokenizer": "simple",
+          "tokenizerArgs": [],
+          "contentTable": "",
+          "languageIdColumnName": "",
+          "matchInfo": "FTS4",
+          "notIndexedColumns": [],
+          "prefixSizes": [],
+          "preferredOrder": "ASC"
+        },
+        "contentSyncTriggers": []
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'daa0cf74661043c7fce6328a042bc9ea')"
+    ]
+  }
+}

@@ -17,7 +17,10 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index(value = ["book_id"])
+        Index(value = ["book_id"]),
+        Index(value = ["path_badge"]),
+        Index(value = ["chapter"]),
+        Index(value = ["region_tag"])
     ]
 )
 data class HadithEntity(
@@ -34,9 +37,25 @@ data class HadithEntity(
     @ColumnInfo(name = "path_badge")
     val pathBadge: String,
 
+    /** «المدينة» أو «الشام» أو «مشترك» */
+    @ColumnInfo(name = "region_tag", defaultValue = "'المدينة'")
+    val regionTag: String = "المدينة",
+
     @ColumnInfo(name = "raw_sanad")
     val rawSanad: String,
 
     @ColumnInfo(name = "matn")
-    val matn: String
+    val matn: String,
+
+    /** كشفٌ آلي للمراسيل والبلاغات حتى لا تُعرض كرواية متصلة */
+    @ColumnInfo(name = "is_mursal_or_balagh", defaultValue = "0")
+    val isMursalOrBalagh: Boolean = false,
+
+    /** «مرسل» أو «بلاغ» أو null */
+    @ColumnInfo(name = "transmission_note")
+    val transmissionNote: String? = null,
+
+    /** رقم الرواية في نسخة المصدر (AhmedBaset/hadith-json) للتوثيق */
+    @ColumnInfo(name = "source_number")
+    val sourceNumber: Int? = null
 )

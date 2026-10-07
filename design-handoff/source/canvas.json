@@ -1,0 +1,82 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Books.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "خزانة الكتب",
+      "w": 390,
+      "x": 1880,
+      "y": 0
+    },
+    "Chain.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "شجرة السند",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "Favorites.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "المحفوظات",
+      "w": 390,
+      "x": 2350,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "الآثار — البحث وبطاقة الأثر",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    },
+    "NarratorBio.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "ترجمة الراوي",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "Narrators.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "title": "معجم الرواة",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-07T09:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "heading": {
+      "kind": "title1",
+      "maxW": 2740,
+      "text": "أثر — شاشات التطبيق",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Chain.dc.html",
+    "Narrators.dc.html",
+    "NarratorBio.dc.html",
+    "Books.dc.html",
+    "Favorites.dc.html"
+  ],
+  "pages": [],
+  "title": "تطبيق أثر — شاشات الواجهة"
+}
